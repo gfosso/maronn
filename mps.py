@@ -1,6 +1,6 @@
 import numpy as np
 from ham import *
-
+import warnings
 
 class mps:
 
@@ -8,8 +8,6 @@ class mps:
     def __init__(self,site_dimension=2,bond_dimension=100):
         self.site_dimension = site_dimension
         self.bond_dimension = bond_dimension
-        self.Gamma=[]
-        self.Lambda=[]
         self.product_state()
 
 
@@ -17,12 +15,10 @@ class mps:
 
     @property
     def site_dimension(self):
-        print("getting single site hilbert space dimension")
         return self._site_dimension
 
     @property
     def bond_dimension(self):
-        print("getting bond dimension")
         return self._bond_dimension
 
     @property
@@ -35,12 +31,10 @@ class mps:
 
     @site_dimension.setter
     def site_dimension(self, d):
-        print("setting single site hilbert space dimension")
         self._site_dimension=d
 
     @bond_dimension.setter
     def bond_dimension(self, chi):
-        print("setting single site hilbert space dimension")
         self._bond_dimension=chi
 
     @Gamma.setter
@@ -52,6 +46,8 @@ class mps:
         self._Lambda=lambd
 
     def product_state(self):
+        self.Gamma=[]
+        self.Lambda=[]
         d=self.site_dimension
         for i in range(2):
             self.Lambda.append(np.ones([1]))
@@ -72,7 +68,9 @@ class mps:
             theta = np.reshape(np.transpose(theta,(1,0,2,3)),(d*chia,d*chic)) # ip a jp b
             # Schmidt decomposition #
             X, Y, Z = np.linalg.svd(theta,full_matrices=0)
-            chi2 = np.min([np.sum(Y>10.**(-10)), chi])	
+            chi2 = np.min([np.sum(Y*Y/max(Y)**2>10.**(-4)), chi]) #provo a tagliare sullo spettro, quindi su Y^2
+            if chi2==chi:
+                warnings.warn('Entanglement is growing a lot')
             piv = np.zeros(len(Y), np.bool)
             piv[(np.argsort(Y)[::-1])[:chi2]] = True
             Y = Y[piv]; invsq = np.sqrt(sum(Y**2))
@@ -124,3 +122,8 @@ class mps:
                 L=np.tensordot(R,C,axes=([0,1],[1,3]))
                 corr += np.real(np.tensordot(L,sz,axes=([0,1],[0,1])) - mean1*mean1)
             return 0.5*corr
+
+
+    def spectrum(self):
+        return self.Lambda[0]*self.Lambda[0].conj()
+       

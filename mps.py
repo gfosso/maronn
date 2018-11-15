@@ -45,14 +45,19 @@ class mps:
     def Lambda(self,lambd):
         self._Lambda=lambd
 
-    def product_state(self):
+    def product_state(self,neel=False):
         self.Gamma=[]
         self.Lambda=[]
         d=self.site_dimension
         for i in range(2):
             self.Lambda.append(np.ones([1]))
             self.Gamma.append(np.zeros([d,1,1]))
-            self.Gamma[-1][0,0,0]=1
+        if neel:
+            self.Gamma[0][0,0,0]=1
+            self.Gamma[1][d-1,0,0]=1
+        else:
+            self.Gamma[0][0,0,0]=1
+            self.Gamma[1][0,0,0]=1
 
     def evol(self,U):
         d=self.site_dimension
@@ -94,7 +99,7 @@ class mps:
             mag += np.real(np.tensordot(C,sz,axes=([0,1],[0,1])))
         return 0.5*mag
     
-    def expectation_SzSz(self,dist):
+    def expectation_SzSz(self,dist,connected=True):
         d=self.site_dimension
         sz=np.diag([Sz(conf,0) for conf in range(0,d)])
         corr=0.
@@ -120,7 +125,11 @@ class mps:
                     R=np.trace(T,axis1=0,axis2=2)
                 C=np.tensordot(self.Gamma[np.mod(i_bond+dist,2)],np.conj(self.Gamma[np.mod(i_bond+dist,2)]),axes=(2,2))
                 L=np.tensordot(R,C,axes=([0,1],[1,3]))
-                corr += np.real(np.tensordot(L,sz,axes=([0,1],[0,1])) - mean1*mean1)
+                if connected:
+                   corr += np.real(np.tensordot(L,sz,axes=([0,1],[0,1])) - mean1*mean1)
+                else:
+                   corr += np.real(np.tensordot(L,sz,axes=([0,1],[0,1]))) 
+
             return 0.5*corr
 
 

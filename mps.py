@@ -46,6 +46,9 @@ class mps:
         self._Lambda=lambd
 
     def product_state(self,neel=False):
+	'''
+	neel=True for Neel state initialization
+	'''
         self.Gamma=[]
         self.Lambda=[]
         d=self.site_dimension

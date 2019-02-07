@@ -46,21 +46,19 @@ class mps:
         self._Lambda=lambd
 
     def product_state(self,neel=False):
-	'''
-	neel=True for Neel state initialization
-	'''
+        """neel=True to inizialize as a neel state"""
         self.Gamma=[]
         self.Lambda=[]
         d=self.site_dimension
         for i in range(2):
-            self.Lambda.append(np.ones([1]))
-            self.Gamma.append(np.zeros([d,1,1]))
+                self.Lambda.append(np.ones([1]))
+                self.Gamma.append(np.zeros([d,1,1]))
         if neel:
-            self.Gamma[0][0,0,0]=1
-            self.Gamma[1][d-1,0,0]=1
+                self.Gamma[0][0,0,0]=1
+                self.Gamma[1][d-1,0,0]=1
         else:
-            self.Gamma[0][0,0,0]=1
-            self.Gamma[1][0,0,0]=1
+                self.Gamma[0][0,0,0]=1
+                self.Gamma[1][0,0,0]=1
 
     def evol(self,U):
         d=self.site_dimension
@@ -76,7 +74,7 @@ class mps:
             theta = np.reshape(np.transpose(theta,(1,0,2,3)),(d*chia,d*chic)) # ip a jp b
             # Schmidt decomposition #
             X, Y, Z = np.linalg.svd(theta,full_matrices=0)
-            chi2 = np.min([np.sum(Y*Y/max(Y)**2>10.**(-4)), chi]) #provo a tagliare sullo spettro, quindi su Y^2
+            chi2 = np.min([np.sum(Y*Y/max(Y)**2>10.**(-10)), chi]) #provo a tagliare sullo spettro, quindi su Y^2
             if chi2==chi:
                 warnings.warn('Entanglement is growing a lot')
             piv = np.zeros(len(Y), np.bool)

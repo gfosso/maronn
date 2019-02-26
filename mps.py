@@ -59,21 +59,23 @@ class mps:
             self.Gamma[0][0,0,0]=1
             self.Gamma[1][0,0,0]=1
 
-    def evol(self,U):
+    def evol(self,Ua,Ub):
         d=self.site_dimension
         chi=self.bond_dimension
-        U=np.reshape(U,(d,d,d,d))
+        U=[]
+        U.append(np.reshape(Ua,(d,d,d,d)))
+        U.append(np.reshape(Ub,(d,d,d,d)))
         for i_bond in [0,1]:
             ia = np.mod(i_bond-1,2); ib = np.mod(i_bond,2); ic = np.mod(i_bond+1,2)
             chia = self.Gamma[ib].shape[1]; chic = self.Gamma[ic].shape[2]
             # Construct theta matrix and time evolution #
             theta = np.tensordot(self.Gamma[ib],self.Gamma[ic],axes=(2,1)) # i a j b
-            theta = np.tensordot(U,theta,axes=([2,3],[0,2])) # ip jp a b 
+            theta = np.tensordot(U[i_bond],theta,axes=([2,3],[0,2])) # ip jp a b 
             theta = np.tensordot(np.diag(self.Lambda[ia]),theta,axes=([1,2])) # a ip jp b 
             theta = np.reshape(np.transpose(theta,(1,0,2,3)),(d*chia,d*chic)) # ip a jp b
             # Schmidt decomposition #
             X, Y, Z = np.linalg.svd(theta,full_matrices=0)
-            chi2 = np.min([np.sum(Y*Y/max(Y)**2>10.**(-8)), chi]) #provo a tagliare sullo spettro, quindi su Y^2
+            chi2 = np.min([np.sum(Y*Y/max(Y)**2>10.**(-10)), chi]) #provo a tagliare sullo spettro, quindi su Y^2
             if chi2==chi:
                 warnings.warn('Entanglement is growing a lot')
             piv = np.zeros(len(Y), np.bool)

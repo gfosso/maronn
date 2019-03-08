@@ -59,6 +59,15 @@ class mps:
             self.Gamma[0][0,0,0]=1
             self.Gamma[1][0,0,0]=1
 
+    def random_state(self,chi=50):
+        self.Gamma=[]
+        self.Lambda=[]
+        d=self.site_dimension
+        for i in range(2):
+            self.Lambda.append(np.random.rand(chi))
+            self.Gamma.append(np.random.rand(d,chi,chi))
+
+
     def evol(self,Ua,Ub):
         d=self.site_dimension
         chi=self.bond_dimension

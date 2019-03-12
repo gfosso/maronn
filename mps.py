@@ -109,7 +109,19 @@ class mps:
             C=np.tensordot(sB,np.conj(sB),axes=([0,2],[0,2]))
             mag += np.real(np.tensordot(C,sz,axes=([0,1],[0,1])))
         return 0.5*mag
-    
+   
+    def staggered_Sz(self):
+        d=self.site_dimension
+        sz=np.diag([Sz(conf,0) for conf in range(0,d)])
+     #   sz=np.array([[0,1],[1,0]])
+        mag=0.
+        for i_bond in range(2):
+            sB = np.tensordot(np.diag(self.Lambda[np.mod(i_bond-1,2)]),self.Gamma[i_bond],axes=(1,1))
+            C=np.tensordot(sB,np.conj(sB),axes=([0,2],[0,2]))
+            mag += ((-1)**(i_bond))*np.real(np.tensordot(C,sz,axes=([0,1],[0,1])))
+        return 0.5*mag
+
+
     def expectation_SzSz(self,dist,connected=True):
         d=self.site_dimension
         sz=np.diag([Sz(conf,0) for conf in range(0,d)])

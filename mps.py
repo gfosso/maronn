@@ -84,7 +84,8 @@ class mps:
             theta = np.reshape(np.transpose(theta,(1,0,2,3)),(d*chia,d*chic)) # ip a jp b
             # Schmidt decomposition #
             X, Y, Z = np.linalg.svd(theta,full_matrices=0)
-            chi2 = np.min([np.sum(Y*Y/max(Y)**2>10.**(-10)), chi]) #provo a tagliare sullo spettro, quindi su Y^2
+#            chi2 = np.min([np.sum(Y*Y/max(Y)**2>10.**(-12)), chi]) #provo a tagliare sullo spettro, quindi su Y^2
+            chi2 = np.min([np.sum(Y>10.**(-7)), chi]) #provo a non tagliare sullo spettro, quindi su Y^2
             if chi2==chi:
                 warnings.warn('Entanglement is growing a lot')
             piv = np.zeros(len(Y), np.bool)

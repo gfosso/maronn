@@ -80,14 +80,15 @@ class mps:
             # Construct theta matrix and time evolution #
             theta = np.tensordot(self.Gamma[ib],self.Gamma[ic],axes=(2,1)) # i a j b
             theta = np.tensordot(U[i_bond],theta,axes=([2,3],[0,2])) # ip jp a b 
+            theta2=theta
             theta = np.tensordot(np.diag(self.Lambda[ia]),theta,axes=([1,2])) # a ip jp b 
             theta = np.reshape(np.transpose(theta,(1,0,2,3)),(d*chia,d*chic)) # ip a jp b
             # Schmidt decomposition #
             X, Y, Z = np.linalg.svd(theta,full_matrices=0)
-#            chi2 = np.min([np.sum(Y*Y/max(Y)**2>10.**(-12)), chi]) #provo a tagliare sullo spettro, quindi su Y^2
-            chi2 = np.min([np.sum(Y>10.**(-7)), chi]) #provo a non tagliare sullo spettro, quindi su Y^2
-            if chi2==chi:
-                warnings.warn('Entanglement is growing a lot')
+  #          chi2 = np.min([np.sum(Y>10**(-16)), chi]) #truncation
+            chi2 = np.min([np.sum(Y>0.), chi]) #truncation
+#            if chi2==chi:
+#                warnings.warn('Entanglement is growing a lot')
             piv = np.zeros(len(Y), np.bool)
             piv[(np.argsort(Y)[::-1])[:chi2]] = True
             Y = Y[piv]; invsq = np.sqrt(sum(Y**2))
@@ -95,10 +96,49 @@ class mps:
             Z = Z[piv,:]
             # Obtain the new values for self.Gamma and s #
             self.Lambda[ib] = Y/invsq 
-            X=np.reshape(X,(d,chia,chi2))
-            X = np.transpose(np.tensordot(np.diag(self.Lambda[ia]**(-1)),X,axes=(1,1)),(1,0,2))
-            self.Gamma[ib] = np.tensordot(X, np.diag(self.Lambda[ib]),axes=(2,0))
+#            X=np.reshape(X,(d,chia,chi2))
+#            X = np.transpose(np.tensordot(np.diag(self.Lambda[ia]**(-1)),X,axes=(1,1)),(1,0,2))#forse il problema è qui?
+#            self.Gamma[ib] = np.tensordot(X, np.diag(self.Lambda[ib]),axes=(2,0))#o qui?
             self.Gamma[ic] = np.transpose(np.reshape(Z,(chi2,d,chic)),(1,0,2))
+            self.Gamma[ib] = np.tensordot(theta2,np.conj(self.Gamma[ic]),axes=([1,3],[0,2]))
+
+#second order trotter decomposition
+    def evol2(self,Ua,Ub):
+        d=self.site_dimension
+        chi=self.bond_dimension
+        U=[]
+        #odd
+        U.append(np.reshape(Ua,(d,d,d,d)))
+        #even
+        U.append(np.reshape(Ub,(d,d,d,d)))
+        for i_bond in [0,1,0]:
+            ia = np.mod(i_bond-1,2); ib = np.mod(i_bond,2); ic = np.mod(i_bond+1,2)
+            chia = self.Gamma[ib].shape[1]; chic = self.Gamma[ic].shape[2]
+            # Construct theta matrix and time evolution #
+            theta = np.tensordot(self.Gamma[ib],self.Gamma[ic],axes=(2,1)) # i a j b
+            theta = np.tensordot(U[i_bond],theta,axes=([2,3],[0,2])) # ip jp a b 
+            theta2=theta
+            theta = np.tensordot(np.diag(self.Lambda[ia]),theta,axes=([1,2])) # a ip jp b 
+            theta = np.reshape(np.transpose(theta,(1,0,2,3)),(d*chia,d*chic)) # ip a jp b
+            # Schmidt decomposition #
+            X, Y, Z = np.linalg.svd(theta,full_matrices=0)
+           # chi2 = np.min([np.sum(Y>10**(-12)), chi]) #truncation
+            chi2 = np.min([np.sum(Y>0.), chi]) #truncation
+#            if chi2==chi:
+#                warnings.warn('Entanglement is growing a lot')
+            piv = np.zeros(len(Y), np.bool)
+            piv[(np.argsort(Y)[::-1])[:chi2]] = True
+            Y = Y[piv]; invsq = np.sqrt(sum(Y**2))
+            X = X[:,piv] 
+            Z = Z[piv,:]
+            # Obtain the new values for self.Gamma and s #
+            self.Lambda[ib] = Y/invsq 
+#            X=np.reshape(X,(d,chia,chi2))
+#            X = np.transpose(np.tensordot(np.diag(self.Lambda[ia]**(-1)),X,axes=(1,1)),(1,0,2))#forse il problema è qui?
+#            self.Gamma[ib] = np.tensordot(X, np.diag(self.Lambda[ib]),axes=(2,0))#o qui?
+            self.Gamma[ic] = np.transpose(np.reshape(Z,(chi2,d,chic)),(1,0,2))
+            self.Gamma[ib] = np.tensordot(theta2,np.conj(self.Gamma[ic]),axes=([1,3],[0,2]))
+
 
     def expectation_Sz(self):
         d=self.site_dimension
